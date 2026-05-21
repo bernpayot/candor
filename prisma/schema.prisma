@@ -5,7 +5,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -13,13 +13,67 @@ datasource db {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  name       String
-  email      String      @unique
-  createdAt  DateTime    @default(now()) @map("created_at")
-  interviews Interview[]
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  interview     Interview[]
 
+  @@unique([email])
   @@map("users")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verifications")
 }
 
 model InterviewLevel {
@@ -30,7 +84,7 @@ model InterviewLevel {
   interview   Interview[]
   prompt      InterviewPrompt[]
 
-  @@map("interview_level")
+  @@map("interview_levels")
 }
 
 model InterviewSpecialty {
@@ -41,7 +95,7 @@ model InterviewSpecialty {
   interview     Interview[]
   prompt        InterviewPrompt[]
 
-  @@map("interview_specialty")
+  @@map("interview_specialties")
 }
 
 model Interview {
@@ -102,7 +156,7 @@ model Assessment {
   topicReferences String[]          @map("topic_references")
   createdAt       DateTime          @default(now()) @map("created_at")
 
-  @@map("assessment")
+  @@map("assessments")
 }
 
 model AssessmentResult {
@@ -113,7 +167,7 @@ model AssessmentResult {
   description  String
   createdAt    DateTime  @default(now()) @map("created_at")
 
-  @@map("assessment_result")
+  @@map("assessment_results")
 }
 
 enum AssessmentStatus {
