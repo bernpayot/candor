@@ -4,9 +4,11 @@ import AppError, {
   NotFoundError,
   ExternalAPIError,
   UnauthorizedError,
+  JobError,
 } from "../utils/errors.js";
 import requireEnv from "../configs/env.checker.js";
 import { AI_MODEL, AI_VOICE } from "../configs/constants.js";
+import { assessmentQueue } from "../jobs/assessment.queue.js";
 
 export class InterviewService {
   constructor(private repository: InterviewRepository) {}
@@ -14,7 +16,7 @@ export class InterviewService {
   async getLevels() {
     const levels = await this.repository.getLevels();
 
-    if (levels === null) {
+    if (levels.length === 0) {
       throw new NotFoundError("Levels not found.");
     }
 
@@ -24,11 +26,44 @@ export class InterviewService {
   async getSpecialties() {
     const specialties = await this.repository.getSpecialties();
 
-    if (specialties === null) {
+    if (specialties.length === 0) {
       throw new NotFoundError("Specialties not found.");
     }
 
     return specialties;
+  }
+
+  async getInterview(interviewId: string, userId: string) {
+    const interview = await this.repository.getInterview(interviewId);
+
+    if (interview === null) {
+      throw new NotFoundError("This interview doesn't exist.");
+    }
+
+    if (interview.userId !== userId) {
+      throw new UnauthorizedError(
+        "You don't have the permission to access this interview.",
+      );
+    }
+
+    return interview;
+  }
+
+  async getInterviewResult(interviewId: string, userId: string) {
+    const interviewResult =
+      await this.repository.getInterviewResult(interviewId);
+
+    if (interviewResult === null) {
+      throw new NotFoundError("This interview doesn't exist.");
+    }
+
+    if (interviewResult.userId !== userId) {
+      throw new UnauthorizedError(
+        "You don't have the permission to access this interview.",
+      );
+    }
+
+    return interviewResult;
   }
 
   async createInterview(userId: string, levelId: string, specialtyId: string) {
@@ -113,7 +148,20 @@ export class InterviewService {
     }
 
     if (interview.userId !== userId) {
-      throw new UnauthorizedError("");
+      throw new UnauthorizedError(
+        "You don't have the permission to update this interview",
+      );
     }
+
+    const updatedInterview =
+      await this.repository.completeInterview(interviewId);
+
+    try {
+      await assessmentQueue.add("assessments", { interviewId });
+    } catch (error) {
+      throw new JobError("Failed to add assessment job to queue");
+    }
+
+    return updatedInterview;
   }
 }

@@ -1,5 +1,8 @@
 import { prisma } from "../configs/database.js";
-import { InterviewStatus } from "../generated/prisma/enums.js";
+import {
+  InterviewStatus,
+  AssessmentStatus,
+} from "../generated/prisma/enums.js";
 
 export class InterviewRepository {
   async getLevels() {
@@ -39,6 +42,7 @@ export class InterviewRepository {
       where: { id: interviewId },
       select: {
         id: true,
+        userId: true,
         questions: {
           select: {
             id: true,
@@ -91,10 +95,13 @@ export class InterviewRepository {
     return check;
   }
 
-  async updateInterviewStatus(interviewId: string, status: InterviewStatus) {
+  async completeInterview(interviewId: string) {
     const updatedInterview = await prisma.interview.update({
       where: { id: interviewId },
-      data: { status: status },
+      data: {
+        status: InterviewStatus.COMPLETED,
+        assessmentStatus: AssessmentStatus.PROCESSING,
+      },
     });
 
     return updatedInterview;
