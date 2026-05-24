@@ -3,6 +3,8 @@ import {
   InterviewStatus,
   AssessmentStatus,
 } from "../generated/prisma/enums.js";
+import type { AssessmentResponse } from "../utils/assessment.schema.js";
+import { TranscriptQuestion } from "../types/interview.types.js";
 
 export class InterviewRepository {
   async getLevels() {
@@ -32,6 +34,10 @@ export class InterviewRepository {
   async getInterviewPrompt(levelId: string, specialtyId: string) {
     const prompt = await prisma.interviewPrompt.findFirst({
       where: { levelId: levelId, specialtyId: specialtyId },
+      include: {
+        level: { select: { levelName: true } },
+        specialty: { select: { specialtyName: true } },
+      },
     });
 
     return prompt;
@@ -69,6 +75,27 @@ export class InterviewRepository {
     return result;
   }
 
+  async getInterviewForAssessment(interviewId: string) {
+    const assess = await prisma.interview.findUnique({
+      where: { id: interviewId },
+      select: {
+        id: true,
+        level: { select: { levelName: true } },
+        specialty: { select: { specialtyName: true } },
+        questions: {
+          select: {
+            id: true,
+            questionText: true,
+            userAnswer: true,
+            sequenceOrder: true,
+          },
+        },
+      },
+    });
+
+    return assess;
+  }
+
   async createInterview(
     userId: string,
     levelId: string,
@@ -95,21 +122,73 @@ export class InterviewRepository {
     return check;
   }
 
-  async completeInterview(interviewId: string) {
-    const updatedInterview = await prisma.interview.update({
-      where: { id: interviewId },
-      data: {
-        status: InterviewStatus.COMPLETED,
-        assessmentStatus: AssessmentStatus.PROCESSING,
-      },
-    });
+  async completeInterview(interviewId: string, question: TranscriptQuestion[]) {
+    return prisma.$transaction(async (tx) => {
+      await tx.interviewQuestion.deleteMany({
+        where: { interviewId },
+      });
 
-    return updatedInterview;
+      await tx.interviewQuestion.createMany({
+        data: question.map((question) => ({
+          interviewId,
+          questionText: question.questionText,
+          userAnswer: question.userAnswer,
+          sequenceOrder: question.sequenceOrder,
+        })),
+      });
+
+      await tx.interview.update({
+        where: { id: interviewId },
+        data: {
+          status: InterviewStatus.COMPLETED,
+          assessmentStatus: AssessmentStatus.PROCESSING,
+          completedAt: new Date(),
+        },
+      });
+    });
   }
 
   async deleteInterview(interviewId: string) {
     await prisma.interview.delete({
       where: { id: interviewId },
     });
+  }
+
+  async assessmentTransaction(data: AssessmentResponse, interviewId: string) {
+    const transaction = await prisma.$transaction(async (tx) => {
+      await tx.assessment.deleteMany({
+        where: { interviewId },
+      });
+
+      await tx.assessment.createMany({
+        data: data.questions.map((question) => ({
+          interviewId,
+          questionId: question.questionId,
+          questionRating: question.questionRating,
+          remarks: question.remarks,
+          topicReferences: question.topicReferences,
+        })),
+      });
+
+      await tx.assessmentResult.upsert({
+        where: { interviewId },
+        create: {
+          interviewId,
+          overallGrade: data.overall.overallGrade,
+          description: data.overall.description,
+        },
+        update: {
+          overallGrade: data.overall.overallGrade,
+          description: data.overall.description,
+        },
+      });
+
+      await tx.interview.update({
+        where: { id: interviewId },
+        data: { assessmentStatus: AssessmentStatus.COMPLETED },
+      });
+    });
+
+    return transaction;
   }
 }

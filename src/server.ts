@@ -5,13 +5,14 @@ import helmet from "helmet";
 import requireEnv from "./configs/env.checker.js";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./configs/auth.js";
+import interviewRouter from "./routes/v1/interview.routes.js";
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
 const origin = requireEnv("CORS_ORIGIN");
 
-const allowedOrigins = ["http://localhost:3000", origin];
+const allowedOrigins = ["http://localhost:5173", origin];
 const options: cors.CorsOptions = {
   origin: allowedOrigins,
   credentials: true,
@@ -24,7 +25,7 @@ app.use(cors(options));
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
-//'/'router coming soon
+app.use("/api/v1", interviewRouter);
 app.use(errorHandler);
 
 app.listen(PORT, () => {

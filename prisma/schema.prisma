@@ -138,7 +138,8 @@ model InterviewPrompt {
   levelId      String             @map("interview_level_id")
   specialty    InterviewSpecialty @relation(fields: [specialtyId], references: [id])
   specialtyId  String             @map("interview_specialty_id")
-  systemPrompt String             @map("system_prompt")
+  topics       String[]
+  avoidTopics  String[]           @map("avoid_topics")
   createdAt    DateTime           @default(now()) @map("created_at")
   interview    Interview[]
 

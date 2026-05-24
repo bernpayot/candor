@@ -8,6 +8,7 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   secret: requireEnv("BETTER_AUTH_SECRET"),
+  trustedOrigins: ["http://localhost:3000"],
   user: {
     modelName: "user",
   },
