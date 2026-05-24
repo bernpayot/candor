@@ -6,6 +6,9 @@ import requireEnv from "./configs/env.checker.js";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./configs/auth.js";
 import interviewRouter from "./routes/v1/interview.routes.js";
+import { generalLimiter, authLimiter } from "./configs/rate.limiter.js";
+import { pinoHttp } from "pino-http";
+import { logger } from "./configs/logger.js";
 
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -20,10 +23,12 @@ const options: cors.CorsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE"],
 };
 
+app.set("trust proxy", 1);
 app.use(helmet());
 app.use(cors(options));
-
-app.all("/api/auth/*splat", toNodeHandler(auth));
+app.use(pinoHttp({ logger }));
+app.use(generalLimiter);
+app.all("/api/auth/*splat", authLimiter, toNodeHandler(auth));
 app.use(express.json());
 app.use("/api/v1", interviewRouter);
 app.use(errorHandler);

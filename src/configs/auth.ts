@@ -8,9 +8,21 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   secret: requireEnv("BETTER_AUTH_SECRET"),
-  trustedOrigins: ["http://localhost:3000"],
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    requireEnv("CORS_ORIGIN"),
+  ],
   user: {
     modelName: "user",
+    additionalFields: {
+      timezone: {
+        type: "string",
+        required: false,
+        defaultValue: "UTC",
+        input: true,
+      },
+    },
   },
   session: {
     modelName: "session",

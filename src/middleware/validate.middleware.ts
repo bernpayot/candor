@@ -15,7 +15,9 @@ export function validate(schema: ZodSchema) {
     });
 
     if (!result.success) {
-      throw new ValidationError(result.error.flatten().fieldErrors.toString());
+      throw new ValidationError(
+        JSON.stringify(result.error.flatten().fieldErrors),
+      );
     }
 
     const data = result.data as ValidatedRequestData;

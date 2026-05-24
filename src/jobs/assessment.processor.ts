@@ -9,12 +9,13 @@ import AppError, {
 import { buildAssessmentPrompt } from "../utils/prompt.builder.js";
 import requireEnv from "../configs/env.checker.js";
 import { AssessmentResponseSchema } from "../utils/assessment.schema.js";
+import { logger } from "../configs/logger.js";
 
 const repository = new InterviewRepository();
 
 export async function assessmentProcessor(job: Job) {
   const { interviewId } = job.data;
-  console.log(`Processing assessment for interview: ${interviewId}`);
+  logger.info({ interviewId }, "Processing assessment.");
 
   const interviewAssessment =
     await repository.getInterviewForAssessment(interviewId);

@@ -6,6 +6,7 @@ import AppError, {
   UnauthorizedError,
   JobError,
   ValidationError,
+  RateLimitError,
 } from "../utils/errors.js";
 import requireEnv from "../configs/env.checker.js";
 import { AI_MODEL, AI_VOICE } from "../configs/constants.js";
@@ -76,12 +77,22 @@ export class InterviewService {
   }
 
   async createInterview(userId: string, levelId: string, specialtyId: string) {
+    const interviewLimit = requireEnv("INTERVIEW_CREATE_LIMIT");
+
     const checkActiveInterview =
       await this.repository.checkActiveInterview(userId);
 
     if (checkActiveInterview !== null) {
       throw new ConflictError(
         "You are already inside an interview! Finish that first.",
+      );
+    }
+
+    const interviewCount = await this.repository.countTodayInterviews(userId);
+
+    if (interviewCount >= Number(interviewLimit)) {
+      throw new RateLimitError(
+        `You have used up all your interview attempts. Please try again tomorrow.`,
       );
     }
 

@@ -5,6 +5,7 @@ import {
 } from "../generated/prisma/enums.js";
 import type { AssessmentResponse } from "../utils/assessment.schema.js";
 import { TranscriptQuestion } from "../types/interview.types.js";
+import { toZonedTime, fromZonedTime } from "date-fns-tz";
 
 export class InterviewRepository {
   async getLevels() {
@@ -190,5 +191,35 @@ export class InterviewRepository {
     });
 
     return transaction;
+  }
+
+  async countTodayInterviews(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { timezone: true },
+    });
+    const timezone = user?.timezone ?? "UTC";
+
+    const now = new Date();
+    const userMidnight = toZonedTime(now, timezone);
+    userMidnight.setHours(0, 0, 0, 0);
+
+    const userTomorrow = new Date(userMidnight);
+    userTomorrow.setDate(userTomorrow.getDate() + 1);
+
+    const startOfDay = fromZonedTime(userMidnight, timezone);
+    const endOfDay = fromZonedTime(userTomorrow, timezone);
+
+    const count = await prisma.interview.count({
+      where: {
+        userId,
+        startedAt: {
+          gte: startOfDay,
+          lt: endOfDay,
+        },
+      },
+    });
+
+    return count;
   }
 }

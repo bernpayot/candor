@@ -13,13 +13,14 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String      @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean     @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  timezone      String      @default("UTC")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   sessions      Session[]
   accounts      Account[]
   interview     Interview[]
@@ -133,15 +134,15 @@ model InterviewQuestion {
 }
 
 model InterviewPrompt {
-  id           String             @id @default(uuid())
-  level        InterviewLevel     @relation(fields: [levelId], references: [id])
-  levelId      String             @map("interview_level_id")
-  specialty    InterviewSpecialty @relation(fields: [specialtyId], references: [id])
-  specialtyId  String             @map("interview_specialty_id")
-  topics       String[]
-  avoidTopics  String[]           @map("avoid_topics")
-  createdAt    DateTime           @default(now()) @map("created_at")
-  interview    Interview[]
+  id          String             @id @default(uuid())
+  level       InterviewLevel     @relation(fields: [levelId], references: [id])
+  levelId     String             @map("interview_level_id")
+  specialty   InterviewSpecialty @relation(fields: [specialtyId], references: [id])
+  specialtyId String             @map("interview_specialty_id")
+  topics      String[]
+  avoidTopics String[]           @map("avoid_topics")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  interview   Interview[]
 
   @@map("interview_prompts")
 }
