@@ -14,6 +14,12 @@ export class InterviewController {
     return res.status(200).json({ data: specialties });
   }
 
+  async getUserInterviews(req: Request, res: Response) {
+    const userId = req.user!.id;
+    const userInterviews = await this.service.getUserInterviews(userId);
+    return res.status(200).json(userInterviews);
+  }
+
   async getInterview(req: Request<InterviewParams>, res: Response) {
     const interviewId = req.params.id;
     const userId = req.user!.id;

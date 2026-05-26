@@ -21,6 +21,9 @@ router.post(
   validate(CreateInterviewSchema),
   (req, res) => interviewController.createInterview(req, res),
 );
+router.get("/interviews", requireAuth, (req, res) =>
+  interviewController.getUserInterviews(req, res),
+);
 router.patch(
   "/interviews/:id",
   requireAuth,

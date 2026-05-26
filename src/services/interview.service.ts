@@ -43,6 +43,12 @@ export class InterviewService {
     }));
   }
 
+  async getUserInterviews(userId: string) {
+    const userInterviews = await this.repository.getUserInterviews(userId);
+
+    return userInterviews;
+  }
+
   async getInterview(interviewId: string, userId: string) {
     const interview = await this.repository.getInterview(interviewId);
 

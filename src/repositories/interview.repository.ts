@@ -24,6 +24,25 @@ export class InterviewRepository {
     return specialties;
   }
 
+  async getUserInterviews(userId: string) {
+    const userInterviews = await prisma.interview.findMany({
+      where: { userId },
+      select: {
+        userId: true,
+        id: true,
+        status: true,
+        startedAt: true,
+        completedAt: true,
+        level: { select: { levelName: true } },
+        specialty: { select: { specialtyName: true } },
+        result: { select: { overallGrade: true, description: true } },
+      },
+      orderBy: { startedAt: "desc" },
+    });
+
+    return userInterviews;
+  }
+
   async getInterview(interviewId: string) {
     const interview = await prisma.interview.findUnique({
       where: { id: interviewId },
