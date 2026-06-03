@@ -25,6 +25,12 @@ export const auth = betterAuth({
         defaultValue: "UTC",
         input: true,
       },
+      onboardingCompleted: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
     },
   },
   session: {
@@ -50,7 +56,7 @@ export const auth = betterAuth({
       otpLength: 6,
       expiresIn: 300,
       allowedAttempts: 3,
-      disableSignUp: true,
+      disableSignUp: false,
       async sendVerificationOTP({ email, otp, type }) {
         const { subject, text, html } = buildVerificationOTPEmail({
           otp,

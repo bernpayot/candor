@@ -13,17 +13,18 @@ datasource db {
 }
 
 model User {
-  id            String      @id
-  name          String
-  email         String
-  emailVerified Boolean     @default(false)
-  image         String?
-  timezone      String      @default("UTC")
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  interview     Interview[]
+  id                  String      @id
+  name                String
+  email               String
+  emailVerified       Boolean     @default(false)
+  image               String?
+  timezone            String      @default("UTC")
+  onboardingCompleted Boolean     @default(false)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  sessions            Session[]
+  accounts            Account[]
+  interview           Interview[]
 
   @@unique([email])
   @@map("users")

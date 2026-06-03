@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { interviewController } from "../../interview.container.js";
+import { interviewController } from "../../containers/interview.container.js";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import { InterviewParams } from "../../types/interview.types.js";
