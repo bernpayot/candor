@@ -11,7 +11,7 @@ export const generalLimiter = rateLimit({
 
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  limit: process.env.NODE_ENV === "production" ? 20 : 200,
   handler: (req, res, next) => {
     next(new RateLimitError("Too many requests. Please try again later."));
   },

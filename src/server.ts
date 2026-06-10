@@ -20,7 +20,7 @@ const options: cors.CorsOptions = {
   origin: allowedOrigins,
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 };
 
 app.set("trust proxy", 1);
