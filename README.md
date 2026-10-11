@@ -589,35 +589,3 @@ Available package scripts:
 | `npm run dev` | Run `src/server.ts` in watch mode |
 | `npm run worker` | Run `src/worker.ts` in watch mode |
 | `npm test` | Placeholder that exits with an error; no test suite is configured |
-
-## Security, limits, and observability
-
-- Helmet sets standard HTTP security headers.
-- CORS is credential-aware and restricted to configured frontend origins.
-- Protected routes resolve the Better Auth session and attach its user to the request.
-- Interview services enforce resource ownership before returning or changing data.
-- Zod validates profile, interview creation, transcript completion, and AI assessment payloads.
-- The OpenAI request includes the user ID as `OpenAI-Safety-Identifier`.
-- General traffic is limited to **100 requests per IP per 15 minutes**.
-- Auth traffic has an additional limit of **20 per 15 minutes in production** and **200 outside production**.
-- Rate limiters currently use in-memory storage, so limits are per API process rather than global across replicas.
-- `app.set("trust proxy", 1)` assumes one trusted reverse proxy hop.
-- Development logs use pretty `debug` output; production uses structured `info` output.
-- Unexpected errors are logged and returned to clients as a generic 500 response.
-
-## Current operational notes
-
-The architecture is implemented, but the repository is not yet production-complete:
-
-- `docker-compose.yml` describes PostgreSQL, Redis, API, and worker services, but no `Dockerfile` is currently present.
-- Compose expects `.env.docker`, and its PostgreSQL health check still contains a `<project>` username placeholder.
-- `package.json` does not provide production `build` or `start` scripts, while Compose expects compiled `dist/worker.js` output.
-- There is no automated test suite, health/readiness endpoint, or graceful shutdown handling.
-- Transcript persistence and queue insertion are separate operations. If enqueueing fails, the interview can remain in `PROCESSING` without a job.
-- Failed or exhausted assessment jobs are logged but do not currently set `assessmentStatus` to `FAILED`.
-- External OpenAI and Groq requests do not currently define application-level timeouts.
-- Queue jobs do not define an explicit retention/removal policy.
-- In-memory rate limiting is unsuitable for globally coordinated limits across multiple API replicas.
-- `GET /api/v1/interviews/:id` and `/result` do not currently apply UUID parameter validation, unlike the completion endpoint.
-
-These are important follow-up areas before relying on the supplied Compose topology or horizontally scaling the service.
